@@ -19,8 +19,10 @@ app.use(express.json());
 // Better-auth handler
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
+// Post Route
 app.use("/post", postRouter);
 
+// Root Route
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello World");
 });
@@ -34,19 +36,13 @@ app.use((req: Request, res: Response) => {
 });
 
 // Handle JSON parsing errors
-app.use((err: any, req: Request, res: Response) => {
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof SyntaxError && "body" in err) {
     return res.status(400).json({
-      error: "Invalid JSON format",
-      message: "Please send valid JSON data",
+      message: "Invalid JSON payload",
     });
   }
-
-  // Handle other errors
-  res.status(500).json({
-    error: "Internal server error",
-    message: err.message,
-  });
+  next(err);
 });
 
 export default app;
