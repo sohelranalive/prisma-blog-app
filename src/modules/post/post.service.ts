@@ -116,7 +116,46 @@ const getAllPost = async ({
   };
 };
 
+const getPostById = async (postId: string) => {
+  // const updateViewCount = await prisma.posts.update({
+  //   where: {
+  //     id: postId,
+  //   },
+  //   data: {
+  //     views: {
+  //       increment: 1,
+  //     },
+  //   },
+  // });
+  // const result = await prisma.posts.findUnique({
+  //   where: {
+  //     id: postId,
+  //   },
+  // });
+
+  return await prisma.$transaction(async (tx) => {
+    await tx.posts.update({
+      where: {
+        id: postId,
+      },
+      data: {
+        views: {
+          increment: 1,
+        },
+      },
+    });
+
+    const postResult = await tx.posts.findUnique({
+      where: {
+        id: postId,
+      },
+    });
+    return postResult;
+  });
+};
+
 export const postService = {
   createPost,
   getAllPost,
+  getPostById,
 };
