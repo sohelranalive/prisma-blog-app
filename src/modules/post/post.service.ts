@@ -1,4 +1,5 @@
-import { Posts } from "../../../generated/prisma/client";
+import { Posts, PostStatus } from "../../../generated/prisma/client";
+import { PostsWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 
 const createPost = async (
@@ -14,31 +15,105 @@ const createPost = async (
   return result;
 };
 
-const getAllPost = async (payload: { search: string | undefined }) => {
-  const result = await prisma.posts.findMany({
-    where: {
+const getAllPost = async ({
+  search,
+  tags,
+  isFeatured,
+  status,
+  authorId,
+  page,
+  limit,
+  skip,
+  sortBy,
+  sortOrder,
+}: {
+  search: string | undefined;
+  tags: string[] | [];
+  isFeatured: boolean | undefined;
+  status: PostStatus | undefined;
+  authorId: string | undefined;
+  page: number;
+  limit: number;
+  skip: number;
+  sortBy: string;
+  sortOrder: string;
+}) => {
+  const andConditions: PostsWhereInput[] = [];
+
+  if (search) {
+    andConditions.push({
       OR: [
         {
           title: {
-            contains: payload.search as string,
+            contains: search as string,
             mode: "insensitive",
           },
         },
         {
           content: {
-            contains: payload.search as string,
+            contains: search as string,
             mode: "insensitive",
           },
         },
         {
           tags: {
-            has: payload.search as string,
+            has: search as string,
           },
         },
       ],
+    });
+  }
+  if (tags.length > 0) {
+    andConditions.push({
+      tags: {
+        hasEvery: tags as string[],
+      },
+    });
+  }
+
+  if (typeof isFeatured === "boolean") {
+    andConditions.push({
+      isFeatured,
+    });
+  }
+
+  if (status) {
+    andConditions.push({
+      status: status,
+    });
+  }
+
+  if (authorId) {
+    andConditions.push({
+      authorId,
+    });
+  }
+
+  const result = await prisma.posts.findMany({
+    take: limit,
+    skip,
+    where: {
+      AND: andConditions,
+    },
+    orderBy: {
+      [sortBy]: sortOrder,
     },
   });
-  return result;
+  const count = await prisma.posts.count({
+    where: {
+      AND: andConditions,
+    },
+  });
+
+  return {
+    data: result,
+    pagination: {
+      count,
+      page,
+      limit,
+      totalPage: Math.ceil(count / limit),
+    },
+  };
 };
 
 export const postService = {
