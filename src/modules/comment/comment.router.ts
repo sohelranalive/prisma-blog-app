@@ -12,6 +12,12 @@ router.patch(
   commentController.updateComment
 );
 
+router.patch(
+  "/moderate/:commentId",
+  authentication("ADMIN"),
+  commentController.moderateComment
+);
+
 router.get("/author/:authorId", commentController.getCommentsByAuthor);
 
 router.delete(

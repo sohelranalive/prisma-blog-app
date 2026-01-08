@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { postService } from "./post.service";
 import { PostStatus } from "../../../generated/prisma/enums";
 import paginationHelper from "../../helpers/paginationHelper";
+import { error } from "node:console";
 
 const createPost = async (req: Request, res: Response) => {
   try {
@@ -97,8 +98,31 @@ const getPostById = async (req: Request, res: Response) => {
   }
 };
 
+const getMyPost = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      throw new Error("Your are not authorized");
+    }
+
+    const result = await postService.getMyPost(user.id);
+
+    res.status(200).json({
+      message: "All posts retrieved successfully",
+      data: result,
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      message: "Post retrieved failed",
+      error: error.message,
+    });
+  }
+};
+
 export const postController = {
   createPost,
   getAllPost,
   getPostById,
+  getMyPost,
 };
