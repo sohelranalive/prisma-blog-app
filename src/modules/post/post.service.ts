@@ -1,4 +1,9 @@
-import { Posts, PostStatus } from "../../../generated/prisma/client";
+import { promise } from "better-auth/*";
+import {
+  CommentStatus,
+  Posts,
+  PostStatus,
+} from "../../../generated/prisma/client";
 import { PostsWhereInput } from "../../../generated/prisma/models";
 import { prisma } from "../../lib/prisma";
 
@@ -282,6 +287,54 @@ const deletePost = async (
   });
 };
 
+const getStats = async () => {
+  return await prisma.$transaction(async (tx) => {
+    // const totalPost = await tx.posts.count();
+    // const publishedPost = await tx.posts.count({
+    //   where: {
+    //     status: PostStatus.PUBLISHED,
+    //   },
+    // });
+    // const draftPost = await tx.posts.count({
+    //   where: {
+    //     status: PostStatus.DRAFT,
+    //   },
+    // });
+    // const archivePost = await tx.posts.count({
+    //   where: {
+    //     status: PostStatus.ARCHIVE,
+    //   },
+    // });
+
+    const [
+      totalPost,
+      publishedPost,
+      draftPost,
+      archivePost,
+      totalComment,
+      approvedComment,
+      rejectedComment,
+    ] = await Promise.all([
+      await tx.posts.count(),
+      await tx.posts.count({ where: { status: PostStatus.PUBLISHED } }),
+      await tx.posts.count({ where: { status: PostStatus.DRAFT } }),
+      await tx.posts.count({ where: { status: PostStatus.ARCHIVE } }),
+      await tx.comments.count(),
+      await tx.comments.count({ where: { status: CommentStatus.APPROVED } }),
+      await tx.comments.count({ where: { status: CommentStatus.REJECTED } }),
+    ]);
+    return {
+      totalPost,
+      publishedPost,
+      draftPost,
+      archivePost,
+      totalComment,
+      approvedComment,
+      rejectedComment,
+    };
+  });
+};
+
 export const postService = {
   createPost,
   getAllPost,
@@ -289,4 +342,5 @@ export const postService = {
   getMyPost,
   updatePost,
   deletePost,
+  getStats,
 };

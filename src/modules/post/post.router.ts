@@ -5,6 +5,7 @@ import authentication from "../../middleware/authentication";
 const router = express.Router();
 
 router.get("/", postController.getAllPost);
+router.get("/stats", authentication("ADMIN"), postController.getStats);
 router.get(
   "/myPost",
   authentication("USER", "ADMIN"),
