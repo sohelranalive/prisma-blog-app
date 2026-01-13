@@ -4,6 +4,8 @@ import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 import cors from "cors";
 import { commentRouter } from "./modules/comment/comment.router";
+import errorHandler from "./middleware/globalErrorHandler";
+import { notFound } from "./middleware/notFound";
 const app = express();
 
 // Cors
@@ -31,22 +33,27 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Hello World");
 });
 
-// Handle path errors
-app.use((req: Request, res: Response) => {
-  res.status(404).json({
-    message: "route not found",
-    path: req.path,
-  });
-});
+app.use(notFound);
 
-// Handle JSON parsing errors
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  if (err instanceof SyntaxError && "body" in err) {
-    return res.status(400).json({
-      message: "Invalid JSON payload",
-    });
-  }
-  next(err);
-});
+// Global Error Handler
+app.use(errorHandler);
+
+// // Handle path errors
+// app.use((req: Request, res: Response) => {
+//   res.status(404).json({
+//     message: "route not found",
+//     path: req.path,
+//   });
+// });
+
+// // Handle JSON parsing errors
+// app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+//   if (err instanceof SyntaxError && "body" in err) {
+//     return res.status(400).json({
+//       message: "Invalid JSON payload",
+//     });
+//   }
+//   next(err);
+// });
 
 export default app;

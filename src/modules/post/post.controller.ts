@@ -1,11 +1,11 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { postService } from "./post.service";
 import { PostStatus } from "../../../generated/prisma/enums";
 import paginationHelper from "../../helpers/paginationHelper";
 import { error } from "node:console";
 import { prisma } from "../../lib/prisma";
 
-const createPost = async (req: Request, res: Response) => {
+const createPost = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await postService.createPost(
       req.body,
@@ -16,14 +16,11 @@ const createPost = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error: any) {
-    res.status(400).json({
-      message: "Post creation failed",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
-const getAllPost = async (req: Request, res: Response) => {
+const getAllPost = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { search } = req.query;
     const searchString = typeof search === "string" ? search : undefined;
@@ -72,10 +69,7 @@ const getAllPost = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error: any) {
-    res.status(400).json({
-      message: "Post retrieved failed",
-      error: error.message,
-    });
+    next(error);
   }
 };
 
@@ -121,7 +115,7 @@ const getMyPost = async (req: Request, res: Response) => {
   }
 };
 
-const updatePost = async (req: Request, res: Response) => {
+const updatePost = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = req.user;
     const isAdmin = user?.role === "ADMIN";
@@ -144,10 +138,11 @@ const updatePost = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     // const errorMessage = (error instanceof Error) ? error.message : "Post update failed"
-    res.status(400).json({
-      message: "Post update failed",
-      error: error.message,
-    });
+    // res.status(400).json({
+    //   message: "Post update failed",
+    //   error: error.message,
+    // });
+    next(error);
   }
 };
 
