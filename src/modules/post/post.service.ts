@@ -314,6 +314,10 @@ const getStats = async () => {
       totalComment,
       approvedComment,
       rejectedComment,
+      totalUsers,
+      adminCount,
+      userCount,
+      totalViews,
     ] = await Promise.all([
       await tx.posts.count(),
       await tx.posts.count({ where: { status: PostStatus.PUBLISHED } }),
@@ -322,6 +326,10 @@ const getStats = async () => {
       await tx.comments.count(),
       await tx.comments.count({ where: { status: CommentStatus.APPROVED } }),
       await tx.comments.count({ where: { status: CommentStatus.REJECTED } }),
+      await tx.user.count(),
+      await tx.user.count({ where: { role: "USER" } }),
+      await tx.user.count({ where: { role: "ADMIN" } }),
+      await tx.posts.aggregate({ _sum: { views: true } }),
     ]);
     return {
       totalPost,
@@ -331,6 +339,10 @@ const getStats = async () => {
       totalComment,
       approvedComment,
       rejectedComment,
+      totalUsers,
+      adminCount,
+      userCount,
+      totalViews: totalViews._sum.views,
     };
   });
 };
