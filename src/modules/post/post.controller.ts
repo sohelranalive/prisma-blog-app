@@ -3,6 +3,7 @@ import { postService } from "./post.service";
 import { PostStatus } from "../../../generated/prisma/enums";
 import paginationHelper from "../../helpers/paginationHelper";
 import { error } from "node:console";
+import { prisma } from "../../lib/prisma";
 
 const createPost = async (req: Request, res: Response) => {
   try {
@@ -120,9 +121,64 @@ const getMyPost = async (req: Request, res: Response) => {
   }
 };
 
+const updatePost = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    const isAdmin = user?.role === "ADMIN";
+    if (!user) {
+      throw new Error("Your are not authorized");
+    }
+
+    const { postId } = req.params;
+
+    const result = await postService.updatePost(
+      postId as string,
+      req.body,
+      user.id,
+      isAdmin
+    );
+
+    res.status(201).json({
+      message: "Post updated",
+      data: result,
+    });
+  } catch (error: any) {
+    // const errorMessage = (error instanceof Error) ? error.message : "Post update failed"
+    res.status(400).json({
+      message: "Post update failed",
+      error: error.message,
+    });
+  }
+};
+
+const deletePost = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    const isAdmin = user?.role === "ADMIN";
+    const { postId } = req.params;
+    const result = await postService.deletePost(
+      user?.id as string,
+      postId as string,
+      isAdmin
+    );
+    res.status(201).json({
+      message: "Post deleted",
+      data: result,
+    });
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Post delete failed";
+    res.status(400).json({
+      message: errorMessage,
+    });
+  }
+};
+
 export const postController = {
   createPost,
   getAllPost,
   getPostById,
   getMyPost,
+  updatePost,
+  deletePost,
 };
