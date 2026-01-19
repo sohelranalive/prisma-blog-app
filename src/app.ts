@@ -11,9 +11,9 @@ const app = express();
 // Cors
 app.use(
   cors({
-    origin: process.env.APP_AUTH_URL || "http://localhost:4000",
+    origin: process.env.APP_AUTH_URL || "http://localhost:3000",
     credentials: true,
-  })
+  }),
 );
 
 // Json Parser
